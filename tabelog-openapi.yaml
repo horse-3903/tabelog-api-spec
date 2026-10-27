@@ -1,0 +1,6052 @@
+openapi: "3.0.3"
+info:
+  title: "Tabelog Inbound mobile API (unofficial)"
+  version: "2.24.1"
+  description: "Reverse-engineered from the decompiled Android app `com.kakaku.tabelog.tourists` 2.24.1 (Tabelog Inbound / \"TabelogInbound Android\").\nUnofficial and unverified against the live service apart from the calls noted below. Not endorsed by Kakaku.com.\n\nObserved behaviour:\n- Every JSON object in responses also carries `granularity` (\"S\" seen).\n- `GET account/latest` returns a fresh `access_token` and the previous one is then revoked (401 `unavailableAccessToken`, \"Token has been revoked\"). Clients must store the newest token.\n- Auth: an anonymous device-level `X-Tabelog-Secret-Token` is requested via `POST secret_token_generate/create` with a random UUID as `code`; after email one-time-password login, `X-Tabelog-Access-Token` is added. Which endpoints require login is inferred (`security`).\n- Property names are snake_case versions of the Kotlin property names (kotlinx.serialization naming strategy), checked against live responses for the account and saved-list objects only.\n- List endpoints that accept arrays use `name[]` query or form keys.\n- Required/optional and nullability are not recoverable from the bytecode, so nothing is marked required."
+servers:
+  - url: "https://api.tabelog.com"
+    description: "Assembled in code as 'https://api.' + 'tabelog.com'; not confirmed by a live request to the root"
+tags:
+  - name: "Saved lists"
+  - name: "Notifications"
+  - name: "Restaurants"
+  - name: "Account"
+  - name: "Reservations"
+  - name: "Visited"
+  - name: "Areas"
+  - name: "Utilities"
+  - name: "Google Routes"
+paths:
+  "/directions/v2:computeRoutes":
+    servers:
+      - url: "https://routes.googleapis.com"
+    post:
+      operationId: "computeRoutes"
+      tags:
+        - "Google Routes"
+      "x-android-method": "N9.a.a"
+      parameters:
+        - name: "X-Goog-Api-Key"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "X-Goog-FieldMask"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/RoutesRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/GoogleMapsRoutesResult"
+      security: []
+  "/tabelog_inbound_appli/account/authenticate":
+    post:
+      operationId: "accountAuthenticate"
+      tags:
+        - "Account"
+      "x-android-method": "M9.a.a"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/AccountAuthenticateRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/AccountAuthenticateResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/account/deletable":
+    get:
+      operationId: "accountDeletable"
+      tags:
+        - "Account"
+      "x-android-method": "M9.b.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/AccountDeletableResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+  "/tabelog_inbound_appli/account/delete":
+    delete:
+      operationId: "accountDelete"
+      tags:
+        - "Account"
+      "x-android-method": "M9.c.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+  "/tabelog_inbound_appli/account/latest":
+    get:
+      operationId: "accountLatest"
+      tags:
+        - "Account"
+      "x-android-method": "M9.d.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/AccountLatestResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+  "/tabelog_inbound_appli/account/logout":
+    post:
+      operationId: "accountLogout"
+      tags:
+        - "Account"
+      "x-android-method": "M9.e.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+      responses:
+        "200":
+          description: "OK"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/account/profile_update":
+    post:
+      operationId: "accountProfileUpdate"
+      tags:
+        - "Account"
+      "x-android-method": "M9.f.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                nickname:
+                  type: "string"
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/AccountProfileUpdateResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/account/register":
+    post:
+      operationId: "accountRegister"
+      tags:
+        - "Account"
+      "x-android-method": "M9.g.a"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/AccountRegisterRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/AccountRegisterResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/account/token":
+    post:
+      operationId: "accountToken"
+      tags:
+        - "Account"
+      "x-android-method": "M9.h.a"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/AccountTokenExchangeRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/AccountTokenExchangeResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/account/update":
+    post:
+      operationId: "accountUpdate"
+      tags:
+        - "Account"
+      "x-android-method": "M9.i.a"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/AccountUpdateRequest"
+      responses:
+        "200":
+          description: "OK"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/ai_recommend/index":
+    get:
+      operationId: "aiRecommendIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.j.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/AiRecommendIndexResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/ai_recommend/show":
+    get:
+      operationId: "aiRecommendShow"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.k.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+        - name: "date"
+          in: "query"
+          schema:
+            type: "string"
+        - name: "restaurant_id"
+          in: "query"
+          schema:
+            type: "integer"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/AiRecommendShowResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/area_area1/index":
+    get:
+      operationId: "areaArea1Index"
+      tags:
+        - "Areas"
+      "x-android-method": "M9.l.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+        - name: "prefecture_id"
+          in: "query"
+          schema:
+            type: "integer"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/AreaListResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/area_area2/index":
+    get:
+      operationId: "areaArea2Index"
+      tags:
+        - "Areas"
+      "x-android-method": "M9.m.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+        - name: "area1_id"
+          in: "query"
+          schema:
+            type: "integer"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/AreaArea2Result"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/area_municipal/index":
+    get:
+      operationId: "areaMunicipalIndex"
+      tags:
+        - "Areas"
+      "x-android-method": "M9.n.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+        - name: "prefecture_id"
+          in: "query"
+          schema:
+            type: "integer"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/AreaListResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/area_station/index":
+    get:
+      operationId: "areaStationIndex"
+      tags:
+        - "Areas"
+      "x-android-method": "M9.o.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "area2_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/AreaListResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/check_japan_coordinate/index":
+    get:
+      operationId: "checkJapanCoordinateIndex"
+      tags:
+        - "Utilities"
+      "x-android-method": "M9.p.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "latitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+        - name: "longitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/CheckJapanCoordinateResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/hozon_list/create":
+    post:
+      operationId: "hozonListCreate"
+      tags:
+        - "Saved lists"
+      "x-android-method": "M9.r.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                title:
+                  type: "string"
+                description:
+                  type: "string"
+                visibility: {}
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/HozonListCreateResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/hozon_list/destroy":
+    post:
+      operationId: "hozonListDestroy"
+      tags:
+        - "Saved lists"
+      "x-android-method": "M9.s.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                hozon_list_id:
+                  type: "integer"
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/HozonListDestroyResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/hozon_list/show":
+    get:
+      operationId: "hozonListShow"
+      tags:
+        - "Saved lists"
+      "x-android-method": "M9.v.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "share_token"
+          in: "query"
+          schema:
+            type: "string"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/HozonListShowResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+  "/tabelog_inbound_appli/hozon_list/update":
+    post:
+      operationId: "hozonListUpdate"
+      tags:
+        - "Saved lists"
+      "x-android-method": "M9.z.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                hozon_list_id:
+                  type: "integer"
+                title:
+                  type: "string"
+                description:
+                  type: "string"
+                visibility: {}
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/HozonListUpdateResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/hozon_list_restaurant/index":
+    get:
+      operationId: "hozonListRestaurantIndex"
+      tags:
+        - "Saved lists"
+      "x-android-method": "M9.t.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "hozon_list_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "per_page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/HozonListRestaurantIndexResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+  "/tabelog_inbound_appli/hozon_list_restaurant/update":
+    post:
+      operationId: "hozonListRestaurantUpdate"
+      tags:
+        - "Saved lists"
+      "x-android-method": "M9.u.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                restaurant_id:
+                  type: "integer"
+                "hozon_list_id_list[]":
+                  type: "array"
+                  items:
+                    type: "integer"
+                is_favorite:
+                  type: "integer"
+                is_visited:
+                  type: "integer"
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/HozonListRestaurantUpdateResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/hozon_list_subscription/create":
+    post:
+      operationId: "hozonListSubscriptionCreate"
+      tags:
+        - "Saved lists"
+      "x-android-method": "M9.w.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                share_token:
+                  type: "string"
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/HozonListSubscriptionCreateResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/hozon_list_subscription/destroy":
+    post:
+      operationId: "hozonListSubscriptionDestroy"
+      tags:
+        - "Saved lists"
+      "x-android-method": "M9.x.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                hozon_list_id:
+                  type: "integer"
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/HozonListSubscriptionDestroyResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/hozon_restaurant/index":
+    get:
+      operationId: "hozonRestaurantIndex"
+      tags:
+        - "Saved lists"
+      "x-android-method": "M9.A.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "per_page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "prefecture_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "latitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "float"
+        - name: "longitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "float"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/HozonRestaurantIndexResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+  "/tabelog_inbound_appli/hozon_restaurant/login_sync":
+    post:
+      operationId: "hozonRestaurantLoginSync"
+      tags:
+        - "Saved lists"
+      "x-android-method": "M9.B.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                "restaurant_id_list[]":
+                  type: "array"
+                  items:
+                    type: "integer"
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/HozonRestaurantLoginSyncResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/hozon_sharing/update":
+    post:
+      operationId: "hozonSharingUpdate"
+      tags:
+        - "Saved lists"
+      "x-android-method": "M9.E.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                list_type: {}
+                visibility: {}
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/HozonSharingUpdateResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/information_latest/show":
+    get:
+      operationId: "informationLatestShow"
+      tags:
+        - "Notifications"
+      "x-android-method": "M9.F.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/InformationLatestResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/information_master_data/show":
+    get:
+      operationId: "informationMasterDataShow"
+      tags:
+        - "Notifications"
+      "x-android-method": "M9.G.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/InformationMasterDataResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/information_message/index":
+    get:
+      operationId: "informationMessageIndex"
+      tags:
+        - "Notifications"
+      "x-android-method": "M9.H.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/InformationMessageResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/notification/count":
+    get:
+      operationId: "notificationCount"
+      tags:
+        - "Notifications"
+      "x-android-method": "M9.I.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/NotificationCountResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+  "/tabelog_inbound_appli/notification/list":
+    get:
+      operationId: "notificationList"
+      tags:
+        - "Notifications"
+      "x-android-method": "M9.J.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "per_page"
+          in: "query"
+          schema:
+            type: "integer"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/NotificationListResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+  "/tabelog_inbound_appli/notification/read":
+    post:
+      operationId: "notificationRead"
+      tags:
+        - "Notifications"
+      "x-android-method": "M9.K.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+                notification_id:
+                  type: "integer"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/NotificationReadResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/onetime_password/send":
+    post:
+      operationId: "onetimePasswordSend"
+      tags:
+        - "Account"
+      "x-android-method": "M9.L.a"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/OnetimePasswordSendRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/OnetimePasswordSendResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/popular_item_nearby/index":
+    get:
+      operationId: "popularItemNearbyIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.M.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+        - name: "latitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+        - name: "longitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/PopularItemNearbyResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/popular_items/index":
+    get:
+      operationId: "popularItemsIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.N.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+        - name: "selected_prefecture_ids[]"
+          in: "query"
+          schema:
+            type: "array"
+            items:
+              type: "integer"
+          style: "form"
+          explode: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/PopularItemsResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/push_device_token/register":
+    post:
+      operationId: "pushDeviceTokenRegister"
+      tags:
+        - "Account"
+      "x-android-method": "M9.O.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                device_token:
+                  type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/NoneResponseResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/reservation/list":
+    get:
+      operationId: "reservationList"
+      tags:
+        - "Reservations"
+      "x-android-method": "M9.P.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "per_page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "sort"
+          in: "query"
+          schema:
+            type: "string"
+        - name: "booked_flag"
+          in: "query"
+          schema:
+            type: "integer"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ReservationListResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+  "/tabelog_inbound_appli/reservation/show":
+    get:
+      operationId: "reservationShow"
+      tags:
+        - "Reservations"
+      "x-android-method": "M9.V.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "yoyaku_code"
+          in: "query"
+          schema:
+            type: "string"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ReservationShowResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+  "/tabelog_inbound_appli/reservation_search_reservable_date/index":
+    get:
+      operationId: "reservationSearchReservableDateIndex"
+      tags:
+        - "Reservations"
+      "x-android-method": "M9.Q.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "plan_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "seat_only_flg"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ReservationSearchReservableDateResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/reservation_search_reservable_member/index":
+    get:
+      operationId: "reservationSearchReservableMemberIndex"
+      tags:
+        - "Reservations"
+      "x-android-method": "M9.S.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "plan_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "seat_only_flg"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "reservation_date"
+          in: "query"
+          schema:
+            type: "string"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ReservationSearchReservableMemberResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/reservation_search_reservable_time/index":
+    get:
+      operationId: "reservationSearchReservableTimeIndex"
+      tags:
+        - "Reservations"
+      "x-android-method": "M9.T.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "plan_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "reservation_number_of_people"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "seat_only_flg"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "reservation_date"
+          in: "query"
+          schema:
+            type: "string"
+        - name: "reservation_datetime"
+          in: "query"
+          schema:
+            type: "string"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ReservationSearchReservableTimeResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/reservation_search_reservable_vacancy/index":
+    get:
+      operationId: "reservationSearchReservableVacancyIndex"
+      tags:
+        - "Reservations"
+      "x-android-method": "M9.U.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "plan_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "seat_only_flg"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ReservationSearchReservableVacancyResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/restaurant_detail/show":
+    get:
+      operationId: "restaurantDetailShow"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.c0.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+        - name: "test_access_key"
+          in: "query"
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RestaurantDetailShowResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/restaurant_detail_menu_list/index":
+    get:
+      operationId: "restaurantDetailMenuListIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.W.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RestaurantDetailMenuListResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/restaurant_detail_photo_list/index":
+    get:
+      operationId: "restaurantDetailPhotoListIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.Y.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "photo_type"
+          in: "query"
+          schema: {}
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RestaurantDetailPhotoListResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/restaurant_detail_prosperity_banner_list/index":
+    get:
+      operationId: "restaurantDetailProsperityBannerListIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.Z.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RestaurantDetailProsperityBannerListResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/restaurant_detail_review_list/index":
+    get:
+      operationId: "restaurantDetailReviewListIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.b0.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "use_type"
+          in: "query"
+          schema: {}
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RestaurantDetailReviewListResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/restaurant_detail_vacancy_status_on_latest_days/index":
+    get:
+      operationId: "restaurantDetailVacancyStatusOnLatestDaysIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.d0.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RestaurantDetailVacancyStatusOnLatestDaysResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/restaurant_latest/index":
+    get:
+      operationId: "restaurantLatestIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.e0.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items:
+              type: "integer"
+          style: "form"
+          explode: true
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RestaurantLatestResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/restaurant_reservable_time_information_list/index":
+    get:
+      operationId: "restaurantReservableTimeInformationListIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.f0.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items:
+              type: "integer"
+          style: "form"
+          explode: true
+        - name: "reservation_datetime"
+          in: "query"
+          schema:
+            type: "string"
+        - name: "reservation_member"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RestaurantReservableTimeInformationListResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/restaurant_search/index":
+    get:
+      operationId: "restaurantSearchIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.G0.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+        - name: "search_type"
+          in: "query"
+          schema: {}
+        - name: "area_datatype"
+          in: "query"
+          schema: {}
+        - name: "area_datatype_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "genre_datatype"
+          in: "query"
+          schema: {}
+        - name: "genre_datatype_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "range"
+          in: "query"
+          schema:
+            type: "number"
+            format: "float"
+        - name: "latitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+        - name: "longitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+        - name: "min_latitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+        - name: "max_latitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+        - name: "min_longitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+        - name: "max_longitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+        - name: "fixed_area_search_flg"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "cost_timezone_type"
+          in: "query"
+          schema: {}
+        - name: "low_cost_type"
+          in: "query"
+          schema: {}
+        - name: "high_cost_type"
+          in: "query"
+          schema: {}
+        - name: "open_on_sunday_flg"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "business_hour_type"
+          in: "query"
+          schema: {}
+        - name: "reservation_datetime"
+          in: "query"
+          schema:
+            type: "string"
+        - name: "reservation_member"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "reservation_search_mode"
+          in: "query"
+          schema: {}
+        - name: "situation_type"
+          in: "query"
+          schema: {}
+        - name: "smoking_type"
+          in: "query"
+          schema: {}
+        - name: "separation_smoking_flg"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "reservation_type"
+          in: "query"
+          schema: {}
+        - name: "parking_flg"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "card_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "emoney_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "qrcode_payment_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "private_room_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "complete_private_room"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "charter_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "space_facility_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "food_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "drink_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "course_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "drink_course_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "location_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "kids_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "service_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "sort_mode"
+          in: "query"
+          schema: {}
+        - name: "current_latitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+        - name: "current_longitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+        - name: "reservation_time_range"
+          in: "query"
+          schema:
+            type: "number"
+            format: "float"
+        - name: "last_minute_reservation_flg"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "tabelog_hyakumeiten_all_flg"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "tabelog_hyakumeiten_category_id_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items:
+              type: "integer"
+          style: "form"
+          explode: true
+        - name: "tabelog_award_type_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items: {}
+          style: "form"
+          explode: true
+        - name: "search_tag_category_ids[]"
+          in: "query"
+          schema:
+            type: "array"
+            items:
+              type: "integer"
+          style: "form"
+          explode: true
+        - name: "search_tag_ids[]"
+          in: "query"
+          schema:
+            type: "array"
+            items:
+              type: "integer"
+          style: "form"
+          explode: true
+        - name: "domestic_popular_flg"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "inbound_popular_flg"
+          in: "query"
+          schema:
+            type: "integer"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RestaurantKeywordSearchResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/restaurant_vacancy_status_on_latest_days/index":
+    get:
+      operationId: "restaurantVacancyStatusOnLatestDaysIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.H0.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "restaurant_id_list[]"
+          in: "query"
+          schema:
+            type: "array"
+            items:
+              type: "integer"
+          style: "form"
+          explode: true
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RestaurantVacancyStatusOnLatestDaysResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/secret_token_generate/create":
+    post:
+      operationId: "secretTokenGenerateCreate"
+      tags:
+        - "Account"
+      "x-android-method": "M9.I0.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+                code:
+                  type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/SecretTokenGenerateResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/suggest_search/index":
+    get:
+      operationId: "suggestSearchIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.L0.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "keyword"
+          in: "query"
+          schema:
+            type: "string"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+        - name: "current_latitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+        - name: "current_longitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "double"
+        - name: "area_datatype"
+          in: "query"
+          schema: {}
+        - name: "area_datatype_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "genre_datatype"
+          in: "query"
+          schema: {}
+        - name: "genre_datatype_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "search_tag_category_ids[]"
+          in: "query"
+          schema:
+            type: "array"
+            items:
+              type: "integer"
+          style: "form"
+          explode: true
+        - name: "search_tag_ids[]"
+          in: "query"
+          schema:
+            type: "array"
+            items:
+              type: "integer"
+          style: "form"
+          explode: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/SuggestSearchResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/total_review/show":
+    get:
+      operationId: "totalReviewShow"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.O0.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "bookmark_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "review_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/TotalReviewShowResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/total_review_photo_list/index":
+    get:
+      operationId: "totalReviewPhotoListIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.M0.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "bookmark_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/TotalReviewPhotoListResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/total_review_review_list/index":
+    get:
+      operationId: "totalReviewReviewListIndex"
+      tags:
+        - "Restaurants"
+      "x-android-method": "M9.N0.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "bookmark_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/TotalReviewReviewListResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+  "/tabelog_inbound_appli/visited_restaurant/create":
+    post:
+      operationId: "visitedRestaurantCreate"
+      tags:
+        - "Visited"
+      "x-android-method": "M9.P0.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                restaurant_id:
+                  type: "integer"
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/VisitedRestaurantCreateResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/visited_restaurant/destroy":
+    post:
+      operationId: "visitedRestaurantDestroy"
+      tags:
+        - "Visited"
+      "x-android-method": "M9.Q0.a"
+      requestBody:
+        required: true
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: "object"
+              properties:
+                restaurant_id:
+                  type: "integer"
+                lang:
+                  type: "string"
+                  enum:
+                    - "en"
+                    - "tw"
+                    - "kr"
+                    - "th"
+                  default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/VisitedRestaurantDestroyResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+  "/tabelog_inbound_appli/visited_restaurant/index":
+    get:
+      operationId: "visitedRestaurantIndex"
+      tags:
+        - "Visited"
+      "x-android-method": "M9.R0.a"
+      parameters:
+        - "$ref": "#/components/parameters/AppVersion"
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "per_page"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "prefecture_id"
+          in: "query"
+          schema:
+            type: "integer"
+        - name: "latitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "float"
+        - name: "longitude"
+          in: "query"
+          schema:
+            type: "number"
+            format: "float"
+        - name: "lang"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "en"
+              - "tw"
+              - "kr"
+              - "th"
+            default: "en"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/VisitedRestaurantIndexResult"
+        default:
+          description: "Error"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ApiError"
+      security:
+        - SecretToken: []
+          AccessToken: []
+components:
+  securitySchemes:
+    SecretToken:
+      type: "apiKey"
+      in: "header"
+      name: "X-Tabelog-Secret-Token"
+    AccessToken:
+      type: "apiKey"
+      in: "header"
+      name: "X-Tabelog-Access-Token"
+  parameters:
+    AppVersion:
+      name: "X-Tabelog-Appli-Version"
+      in: "header"
+      required: true
+      schema:
+        type: "string"
+        default: "TabelogInbound Android/ver2.24.1"
+      description: "The app also sends the same value as User-Agent."
+  schemas:
+    Account:
+      type: "object"
+      properties:
+        country_code_id:
+          type: "integer"
+        email:
+          type: "string"
+        first_name:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        hozon_summary:
+          "$ref": "#/components/schemas/HozonSummary"
+        id:
+          type: "integer"
+        last_name:
+          type: "string"
+        level_status:
+          "$ref": "#/components/schemas/LevelStatus"
+        nickname:
+          type: "string"
+        phone_number:
+          type: "string"
+        visit_achievement:
+          "$ref": "#/components/schemas/VisitAchievement"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Account"
+    AccountAuthenticateRequest:
+      type: "object"
+      properties:
+        code:
+          type: "string"
+        email:
+          type: "string"
+        lang:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/infra/network/request/AccountAuthenticateRequest"
+    AccountAuthenticateResult:
+      type: "object"
+      properties:
+        access_token:
+          type: "string"
+        account:
+          "$ref": "#/components/schemas/Account"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/AccountAuthenticateResult"
+    AccountDeletableResult:
+      type: "object"
+      properties:
+        deletable:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/AccountDeletableResult"
+    AccountLatestResult:
+      type: "object"
+      properties:
+        access_token:
+          type: "string"
+        account:
+          "$ref": "#/components/schemas/Account"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/AccountLatestResult"
+    AccountProfileUpdateResult:
+      type: "object"
+      properties:
+        available_flg:
+          type: "boolean"
+        nickname:
+          type: "string"
+        suggest_nickname_list:
+          type: "array"
+          items:
+            type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/AccountProfileUpdateResult"
+    AccountRegisterRequest:
+      type: "object"
+      properties:
+        country_code_id:
+          type: "integer"
+        first_name:
+          type: "string"
+        lang:
+          type: "string"
+        last_name:
+          type: "string"
+        phone_number:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/infra/network/request/AccountRegisterRequest"
+    AccountRegisterResult:
+      type: "object"
+      properties:
+        access_token:
+          type: "string"
+        account:
+          "$ref": "#/components/schemas/Account"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/AccountRegisterResult"
+    AccountTokenExchangeRequest:
+      type: "object"
+      properties:
+        lang:
+          type: "string"
+        token:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/infra/network/request/AccountTokenExchangeRequest"
+    AccountTokenExchangeResult:
+      type: "object"
+      properties:
+        access_token:
+          type: "string"
+        account:
+          "$ref": "#/components/schemas/Account"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/AccountTokenExchangeResult"
+    AccountUpdateRequest:
+      type: "object"
+      properties:
+        country_code_id:
+          type: "integer"
+        first_name:
+          type: "string"
+        lang:
+          type: "string"
+        last_name:
+          type: "string"
+        phone_number:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/infra/network/request/AccountUpdateRequest"
+    AiRecommendIndexResult:
+      type: "object"
+      properties:
+        date_list:
+          type: "array"
+          items:
+            type: "string"
+            format: "date"
+        restaurant_id:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/AiRecommendIndexResult"
+    AiRecommendRestaurant:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        recommend_text:
+          type: "string"
+        restaurant:
+          "$ref": "#/components/schemas/Restaurant"
+        today_booking_count:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/AiRecommendRestaurant"
+    AiRecommendShowResult:
+      type: "object"
+      properties:
+        date:
+          type: "string"
+          format: "date"
+        hozon_list_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/HozonListRestaurant"
+        hozon_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/HozonRestaurant"
+        restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/AiRecommendRestaurant"
+        visited_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VisitedRestaurant"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/AiRecommendShowResult"
+    AllGenreInformationItem:
+      type: "object"
+      properties:
+        genre:
+          "$ref": "#/components/schemas/Genre"
+        genre_list_item_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/GenreListItem"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        parent_genre_id:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/AllGenreInformationItem"
+    ApiError:
+      type: "object"
+      properties:
+        error:
+          type: "object"
+          properties:
+            status:
+              type: "integer"
+            type:
+              type: "string"
+              example: "unavailableAccessToken"
+            internal_report_message:
+              type: "string"
+            message:
+              type: "string"
+    Area:
+      type: "object"
+      properties:
+        area_type:
+          "$ref": "#/components/schemas/Area_AreaType"
+        contents_id:
+          type: "integer"
+        default_range_type:
+          "$ref": "#/components/schemas/Area_DefaultRangeType"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        location:
+          "$ref": "#/components/schemas/LocationInformation"
+        name:
+          type: "string"
+        popular_image_url:
+          type: "string"
+        thumbnail_url:
+          type: "string"
+          format: "uri"
+        zoom_level:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Area"
+    Area2Group:
+      type: "object"
+      properties:
+        area_id_list:
+          type: "array"
+          items:
+            type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        name:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Area2Group"
+    AreaArea2Result:
+      type: "object"
+      properties:
+        area_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Area"
+        group_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Area2Group"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/AreaArea2Result"
+    AreaListResult:
+      type: "object"
+      properties:
+        area_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Area"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/AreaListResult"
+    Area_AreaType:
+      type: "string"
+      enum:
+        - "area1"
+        - "area2"
+        - "majorCity"
+        - "municipal"
+        - "prefecture"
+        - "station"
+        - "town"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Area$AreaType"
+    Area_DefaultRangeType:
+      type: "string"
+      enum:
+        - "range100"
+        - "range1000"
+        - "range10000"
+        - "range15000"
+        - "range2000"
+        - "range20000"
+        - "range300"
+        - "range3000"
+        - "range500"
+        - "range5000"
+        - "range800"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Area$DefaultRangeType"
+    BookedRestaurantPlan:
+      type: "object"
+      properties:
+        catalog_price:
+          type: "integer"
+        content:
+          type: "string"
+        food_count:
+          type: "integer"
+        freedrink_flg:
+          type: "boolean"
+        freefood_flg:
+          type: "boolean"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        name:
+          type: "string"
+        real_price:
+          type: "integer"
+        thumbnail_image_url:
+          type: "string"
+          format: "uri"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/BookedRestaurantPlan"
+    BookerInfo:
+      type: "object"
+      properties:
+        email:
+          type: "string"
+        first_name:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        last_name:
+          type: "string"
+        masked_credit_card_number:
+          type: "string"
+        tel:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/BookerInfo"
+    BusinessHourByRestaurant:
+      type: "object"
+      properties:
+        business_hour:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantBusinessHour"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        remark:
+          "$ref": "#/components/schemas/RestaurantBusinessHourRemark"
+        restaurant_id:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/BusinessHourByRestaurant"
+    CancelPolicyInfo:
+      type: "object"
+      properties:
+        detail_text:
+          type: "string"
+        free_cancel_deadline_datetime:
+          type: "string"
+          format: "date-time"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/CancelPolicyInfo"
+    CheckJapanCoordinateResult:
+      type: "object"
+      properties:
+        is_japan:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/CheckJapanCoordinateResult"
+    CountryCode:
+      type: "object"
+      properties:
+        code:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        label:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/CountryCode"
+    DuplicatedTrackChecker:
+      type: "object"
+      properties:
+        check_flg:
+          type: "boolean"
+        check_range:
+          type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/DuplicatedTrackChecker"
+    EditDeadlineInfo:
+      type: "object"
+      properties:
+        before_online_user_cancel_deadline:
+          type: "boolean"
+        before_online_user_update_deadline:
+          type: "boolean"
+        cancel_deadline_datetime:
+          type: "string"
+          format: "date-time"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        update_deadline_datetime:
+          type: "string"
+          format: "date-time"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/EditDeadlineInfo"
+    Genre:
+      type: "object"
+      properties:
+        contents_id:
+          type: "integer"
+        genre_name:
+          type: "string"
+        genre_type:
+          "$ref": "#/components/schemas/Genre_GenreType"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        popular_image_url:
+          type: "string"
+        thumbnail_url:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Genre"
+    GenreListItem:
+      type: "object"
+      properties:
+        genre:
+          "$ref": "#/components/schemas/Genre"
+        genre_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Genre"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        inactive:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/GenreListItem"
+    Genre_GenreType:
+      type: "string"
+      enum:
+        - "genre0"
+        - "genre1"
+        - "genre2"
+        - "genre3"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Genre$GenreType"
+    GoogleMapsRoutesResult:
+      type: "object"
+      properties:
+        routes:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/GoogleMapsRoutesResult_Route"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/google/GoogleMapsRoutesResult"
+    GoogleMapsRoutesResult_EncodedPolyline:
+      type: "object"
+      properties:
+        encoded_polyline:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/google/GoogleMapsRoutesResult$EncodedPolyline"
+    GoogleMapsRoutesResult_Leg:
+      type: "object"
+      properties:
+        localized_values:
+          "$ref": "#/components/schemas/GoogleMapsRoutesResult_Leg_LocalizedValues"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/google/GoogleMapsRoutesResult$Leg"
+    GoogleMapsRoutesResult_Leg_LocalizedText:
+      type: "object"
+      properties:
+        text:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/google/GoogleMapsRoutesResult$Leg$LocalizedText"
+    GoogleMapsRoutesResult_Leg_LocalizedValues:
+      type: "object"
+      properties:
+        distance:
+          "$ref": "#/components/schemas/GoogleMapsRoutesResult_Leg_LocalizedText"
+        static_duration:
+          "$ref": "#/components/schemas/GoogleMapsRoutesResult_Leg_LocalizedText"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/google/GoogleMapsRoutesResult$Leg$LocalizedValues"
+    GoogleMapsRoutesResult_Route:
+      type: "object"
+      properties:
+        legs:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/GoogleMapsRoutesResult_Leg"
+        polyline:
+          "$ref": "#/components/schemas/GoogleMapsRoutesResult_EncodedPolyline"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/google/GoogleMapsRoutesResult$Route"
+    Granularity:
+      type: "string"
+      enum:
+        - "L"
+        - "M"
+        - "S"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/enums/Granularity"
+    HozonFavorite:
+      type: "object"
+      properties:
+        count:
+          type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        share_url:
+          type: "string"
+          format: "uri"
+        visibility:
+          "$ref": "#/components/schemas/HozonFavorite_Visibility"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/HozonFavorite"
+    HozonFavorite_Visibility:
+      type: "string"
+      enum:
+        - "personal"
+        - "publicReadonly"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/HozonFavorite$Visibility"
+    HozonList:
+      type: "object"
+      properties:
+        description:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        is_owner:
+          type: "boolean"
+        item_count:
+          type: "integer"
+        list_type:
+          "$ref": "#/components/schemas/HozonList_ListType"
+        share_url:
+          type: "string"
+          format: "uri"
+        thumbnail_image_url:
+          type: "string"
+          format: "uri"
+        title:
+          type: "string"
+        visibility:
+          "$ref": "#/components/schemas/HozonList_Visibility"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/HozonList"
+    HozonListCreateResult:
+      type: "object"
+      properties:
+        hozon_list:
+          "$ref": "#/components/schemas/HozonList"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/HozonListCreateResult"
+    HozonListDestroyResult:
+      type: "object"
+      properties:
+        deleted_list_id:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/HozonListDestroyResult"
+    HozonListRestaurant:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        hozon_list_id_list:
+          type: "array"
+          items:
+            type: "integer"
+        restaurant_id:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/HozonListRestaurant"
+    HozonListRestaurantIndexResult:
+      type: "object"
+      properties:
+        hozon_list_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/HozonListRestaurant"
+        page_information:
+          "$ref": "#/components/schemas/PageInformation"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/HozonListRestaurantIndexResult"
+    HozonListRestaurantUpdateResult:
+      type: "object"
+      properties:
+        created_hozon_restaurant:
+          "$ref": "#/components/schemas/HozonRestaurant"
+        created_visited_restaurant:
+          "$ref": "#/components/schemas/VisitedRestaurant"
+        deleted_hozon_restaurant_id:
+          type: "integer"
+        deleted_visited_restaurant_id:
+          type: "integer"
+        hozon_list_restaurant:
+          "$ref": "#/components/schemas/HozonListRestaurant"
+        hozon_summary:
+          "$ref": "#/components/schemas/HozonSummary"
+        level_status:
+          "$ref": "#/components/schemas/LevelStatus"
+        visit_achievement:
+          "$ref": "#/components/schemas/VisitAchievement"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/HozonListRestaurantUpdateResult"
+    HozonListShowResult:
+      type: "object"
+      properties:
+        hozon_list:
+          "$ref": "#/components/schemas/HozonList"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/HozonListShowResult"
+    HozonListSubscriptionCreateResult:
+      type: "object"
+      properties:
+        hozon_list:
+          "$ref": "#/components/schemas/HozonList"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/HozonListSubscriptionCreateResult"
+    HozonListSubscriptionDestroyResult:
+      type: "object"
+      properties:
+        deleted_list_id:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/HozonListSubscriptionDestroyResult"
+    HozonListUpdateResult:
+      type: "object"
+      properties:
+        hozon_list:
+          "$ref": "#/components/schemas/HozonList"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/HozonListUpdateResult"
+    HozonList_ListType:
+      type: "string"
+      enum:
+        - "custom"
+        - "favorite"
+        - "visited"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/HozonList$ListType"
+    HozonList_Visibility:
+      type: "string"
+      enum:
+        - "personal"
+        - "publicEditable"
+        - "publicReadonly"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/HozonList$Visibility"
+    HozonRestaurant:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        restaurant_id:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/HozonRestaurant"
+    HozonRestaurantIndexResult:
+      type: "object"
+      properties:
+        hozon_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/HozonRestaurant"
+        page_information:
+          "$ref": "#/components/schemas/PageInformation"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/HozonRestaurantIndexResult"
+    HozonRestaurantLoginSyncResult:
+      type: "object"
+      properties:
+        hozon_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/HozonRestaurant"
+        hozon_summary:
+          "$ref": "#/components/schemas/HozonSummary"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/HozonRestaurantLoginSyncResult"
+    HozonSharingUpdateResult:
+      type: "object"
+      properties:
+        hozon_list:
+          "$ref": "#/components/schemas/HozonList"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/HozonSharingUpdateResult"
+    HozonSummary:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        hozon_favorite:
+          "$ref": "#/components/schemas/HozonFavorite"
+        hozon_list_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/HozonList"
+        hozon_visited:
+          "$ref": "#/components/schemas/HozonVisited"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/HozonSummary"
+    HozonVisited:
+      type: "object"
+      properties:
+        count:
+          type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        share_url:
+          type: "string"
+          format: "uri"
+        visibility:
+          "$ref": "#/components/schemas/HozonVisited_Visibility"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/HozonVisited"
+    HozonVisited_Visibility:
+      type: "string"
+      enum:
+        - "personal"
+        - "publicReadonly"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/HozonVisited$Visibility"
+    HyakumeitenCategory:
+      type: "object"
+      properties:
+        area_name:
+          type: "string"
+        genre_name:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/HyakumeitenCategory"
+    InformationLatestResult:
+      type: "object"
+      properties:
+        access_datetime:
+          type: "string"
+          format: "date-time"
+        apple_approved_flg:
+          type: "boolean"
+        duplicated_track_checker:
+          "$ref": "#/components/schemas/DuplicatedTrackChecker"
+        maintenance_flg:
+          type: "boolean"
+        master_data_last_updated_at:
+          type: "string"
+          format: "date-time"
+        restaurant_detail_map_section_hidden_flg:
+          type: "boolean"
+        suggest_interval:
+          type: "number"
+          format: "double"
+        update_notification_flg:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/InformationLatestResult"
+    InformationMasterDataResult:
+      type: "object"
+      properties:
+        all_genre_information_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/AllGenreInformationItem"
+        country_code_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/CountryCode"
+        eye_catch_url_list:
+          type: "array"
+          items:
+            type: "string"
+            format: "uri"
+        genre0_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Genre"
+        level_definition_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/LevelDefinition"
+        main_genre_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/MainGenre"
+        pickup_area_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Area"
+        pickup_popular_area_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Area"
+        pickup_prefecture_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Area"
+        popular_area_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/PopularArea"
+        popular_genre_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Genre"
+        prefecture_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Area"
+        preferred_country_code_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/CountryCode"
+        public_holiday_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/PublicHoliday"
+        region_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Region"
+        tabelog_award_year_list:
+          type: "array"
+          items:
+            type: "integer"
+        tabelog_hyakumeiten_category_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/HyakumeitenCategory"
+        tag_category_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/SearchTagCategory"
+        tag_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/SearchTag"
+        updated_at:
+          type: "string"
+          format: "date-time"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/InformationMasterDataResult"
+    InformationMessage:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        message:
+          type: "string"
+        type:
+          "$ref": "#/components/schemas/InformationMessage_Type"
+        url:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/InformationMessage"
+    InformationMessageResult:
+      type: "object"
+      properties:
+        information_messages:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/InformationMessage"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/InformationMessageResult"
+    InformationMessage_Type:
+      type: "string"
+      enum:
+        - "alert"
+        - "info"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/InformationMessage$Type"
+    LevelDefinition:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        level:
+          type: "integer"
+        required_genre_count:
+          type: "integer"
+        required_prefecture_count:
+          type: "integer"
+        required_reservation_count:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/LevelDefinition"
+    LevelStatus:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        is_banned:
+          type: "boolean"
+        level:
+          type: "integer"
+        reservation_count:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/LevelStatus"
+    LocationInformation:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        latitude:
+          type: "number"
+          format: "double"
+        longitude:
+          type: "number"
+          format: "double"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/LocationInformation"
+    MainGenre:
+      type: "object"
+      properties:
+        genre_id:
+          type: "integer"
+        genre_name:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        image_url:
+          type: "string"
+        is_checkin_target:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/MainGenre"
+    NetBookingInfo:
+      type: "object"
+      properties:
+        actual_station_text:
+          type: "string"
+        baby_member:
+          type: "integer"
+        booked_restaurant_plan:
+          "$ref": "#/components/schemas/BookedRestaurantPlan"
+        booker_info:
+          "$ref": "#/components/schemas/BookerInfo"
+        booking_non_changeable:
+          type: "boolean"
+        can_edit_cancel:
+          type: "boolean"
+        can_edit_flag:
+          type: "boolean"
+        can_yoyaku_booking_flag:
+          type: "boolean"
+        cancel_policy:
+          "$ref": "#/components/schemas/CancelPolicyInfo"
+        categories:
+          type: "array"
+          items:
+            type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        message_for_restaurant:
+          type: "string"
+        online_edit_deadline:
+          "$ref": "#/components/schemas/EditDeadlineInfo"
+        precautions:
+          type: "array"
+          items:
+            type: "string"
+        restaurant_id:
+          type: "integer"
+        restaurant_name:
+          type: "string"
+        restaurant_questions_and_answers:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantQuestionAndAnswer"
+        restaurant_url:
+          type: "string"
+          format: "uri"
+        service_charge:
+          type: "string"
+        sitting_minutes:
+          type: "string"
+        status:
+          "$ref": "#/components/schemas/NetBookingInfo_Status"
+        system_usage_fee:
+          type: "integer"
+        system_usage_fee_per_person:
+          type: "integer"
+        thumbnail_image_url:
+          type: "string"
+          format: "uri"
+        visit_date:
+          type: "string"
+        visit_member:
+          type: "integer"
+        visit_time:
+          type: "string"
+        yoyaku_code:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/NetBookingInfo"
+    NetBookingInfo_Status:
+      type: "string"
+      enum:
+        - "canceled"
+        - "nowBooking"
+        - "visited"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/NetBookingInfo$Status"
+    NoneResponseResult:
+      type: "object"
+      properties: {}
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/NoneResponseResult"
+    Notification:
+      type: "object"
+      properties:
+        category:
+          "$ref": "#/components/schemas/Notification_Category"
+        confirmed_flg:
+          type: "boolean"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        latest_flg:
+          type: "boolean"
+        message:
+          type: "string"
+        notification_type:
+          "$ref": "#/components/schemas/Notification_NotificationType"
+        notified_at:
+          type: "string"
+        read_flg:
+          type: "boolean"
+        yoyaku_code:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Notification"
+    NotificationCountResult:
+      type: "object"
+      properties:
+        unconfirmed_count:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/NotificationCountResult"
+    NotificationListResult:
+      type: "object"
+      properties:
+        notification_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Notification"
+        page_information:
+          "$ref": "#/components/schemas/PageInformation"
+        unconfirmed_count:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/NotificationListResult"
+    NotificationReadResult:
+      type: "object"
+      properties:
+        notification_id:
+          type: "integer"
+        unconfirmed_count:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/NotificationReadResult"
+    Notification_Category:
+      type: "string"
+      enum:
+        - "booking"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Notification$Category"
+    Notification_NotificationType:
+      type: "string"
+      enum:
+        - "ownerCancel"
+        - "ownerCancelForce"
+        - "ownerChange"
+        - "previousDay"
+        - "userCancel"
+        - "userChange"
+        - "userNew"
+        - "week"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Notification$NotificationType"
+    NumberRange:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        max:
+          type: "integer"
+        min:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/NumberRange"
+    OnetimePasswordSendRequest:
+      type: "object"
+      properties:
+        email:
+          type: "string"
+        lang:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/infra/network/request/OnetimePasswordSendRequest"
+    OnetimePasswordSendResult:
+      type: "object"
+      properties: {}
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/OnetimePasswordSendResult"
+    PageInformation:
+      type: "object"
+      properties:
+        current_page_number:
+          type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        hit_count:
+          type: "integer"
+        page_count:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/PageInformation"
+    Photo:
+      type: "object"
+      properties:
+        bookmark_id:
+          type: "integer"
+        comment:
+          type: "string"
+        detail_image_url:
+          type: "string"
+          format: "uri"
+        display_total_review_link_flg:
+          type: "boolean"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        height:
+          type: "integer"
+        id:
+          type: "integer"
+        like_count:
+          type: "integer"
+        main_image_url:
+          type: "string"
+          format: "uri"
+        photo_type:
+          "$ref": "#/components/schemas/Photo_PhotoType"
+        posted_at:
+          type: "string"
+          format: "date-time"
+        posted_owner_flg:
+          type: "boolean"
+        restaurant_id:
+          type: "integer"
+        review_id:
+          type: "integer"
+        status:
+          "$ref": "#/components/schemas/Photo_Status"
+        thumbnail_image_url:
+          type: "string"
+          format: "uri"
+        user_id:
+          type: "integer"
+        width:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Photo"
+    Photo_PhotoType:
+      type: "string"
+      enum:
+        - "drink"
+        - "exterior"
+        - "food"
+        - "interior"
+        - "main"
+        - "menu"
+        - "other"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Photo$PhotoType"
+    Photo_Status:
+      type: "string"
+      enum:
+        - "followerOnly"
+        - "pending"
+        - "privateStatus"
+        - "publicStatus"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Photo$Status"
+    PopularArea:
+      type: "object"
+      properties:
+        area_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Area"
+        area_zone_name:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/PopularArea"
+    PopularItem:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        popular_areas:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Area"
+        popular_genres:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Genre"
+        target_area:
+          "$ref": "#/components/schemas/Area"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/PopularItem"
+    PopularItemNearbyResult:
+      type: "object"
+      properties:
+        is_japan:
+          type: "boolean"
+        popular_item:
+          "$ref": "#/components/schemas/PopularItem"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/PopularItemNearbyResult"
+    PopularItemsResult:
+      type: "object"
+      properties:
+        popular_items:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/PopularItem"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/PopularItemsResult"
+    PublicHoliday:
+      type: "object"
+      properties:
+        date:
+          type: "string"
+          format: "date"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        name:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/PublicHoliday"
+    Region:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        name:
+          type: "string"
+        prefecture_id_list:
+          type: "array"
+          items:
+            type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Region"
+    RelocationDestinationRestaurant:
+      type: "object"
+      properties:
+        area_name:
+          type: "string"
+        explanation:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        name:
+          type: "string"
+        thumbnail_image_url:
+          type: "string"
+          format: "uri"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RelocationDestinationRestaurant"
+    ReservationInfo:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        net_booking_info:
+          "$ref": "#/components/schemas/NetBookingInfo"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/ReservationInfo"
+    ReservationListResult:
+      type: "object"
+      properties:
+        page_information:
+          "$ref": "#/components/schemas/PageInformation"
+        reservation_infos:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/ReservationInfo"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/ReservationListResult"
+    ReservationSearchReservableDateResult:
+      type: "object"
+      properties:
+        vacancy_status_by_date_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VacancyStatusByDate"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/ReservationSearchReservableDateResult"
+    ReservationSearchReservableMemberResult:
+      type: "object"
+      properties:
+        vacancy_status_by_member_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VacancyStatusByMember"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/ReservationSearchReservableMemberResult"
+    ReservationSearchReservableTimeResult:
+      type: "object"
+      properties:
+        selected_time_index:
+          type: "integer"
+        vacancy_status_by_time_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VacancyStatusByTime"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/ReservationSearchReservableTimeResult"
+    ReservationSearchReservableVacancyResult:
+      type: "object"
+      properties:
+        default_date_index:
+          type: "integer"
+        default_member_index:
+          type: "integer"
+        default_time_index:
+          type: "integer"
+        reservable_date_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VacancyStatusByDate"
+        reservable_member_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VacancyStatusByMember"
+        reservable_time_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VacancyStatusByTime"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/ReservationSearchReservableVacancyResult"
+    ReservationShowResult:
+      type: "object"
+      properties:
+        net_booking_info:
+          "$ref": "#/components/schemas/NetBookingInfo"
+        restaurant:
+          "$ref": "#/components/schemas/Restaurant"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/ReservationShowResult"
+    ReserveDateStatusListByRestaurant:
+      type: "object"
+      properties:
+        date_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VacancyStatusByDate"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/ReserveDateStatusListByRestaurant"
+    Restaurant:
+      type: "object"
+      properties:
+        address:
+          type: "string"
+        alias_name:
+          type: "string"
+        area_name:
+          type: "string"
+        average_budget:
+          "$ref": "#/components/schemas/RestaurantBudget"
+        before_relocation_restaurant_id_list:
+          type: "array"
+          items:
+            type: "integer"
+        business_hour:
+          type: "string"
+        business_hour_caution_text:
+          type: "string"
+        catch_copy:
+          type: "string"
+        charter:
+          type: "string"
+        common_plan_information:
+          "$ref": "#/components/schemas/RestaurantCommonPlanInformation"
+        course:
+          type: "string"
+        dress_code:
+          type: "string"
+        drink:
+          type: "string"
+        facebook_url:
+          type: "string"
+          format: "uri"
+        food:
+          type: "string"
+        formal_name:
+          type: "string"
+        genre_name_list:
+          type: "array"
+          items:
+            type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        homepage_url:
+          type: "string"
+          format: "uri"
+        id:
+          type: "integer"
+        instagram_url:
+          type: "string"
+          format: "uri"
+        invoice_registration_number:
+          type: "string"
+        kana_name:
+          type: "string"
+        kids:
+          type: "string"
+        kodawari_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantKodawari"
+        location:
+          type: "string"
+        location_information:
+          "$ref": "#/components/schemas/LocationInformation"
+        map_icon_type:
+          "$ref": "#/components/schemas/Restaurant_MapIconType"
+        maximum_seat_capacity:
+          type: "string"
+        menu_count_data:
+          "$ref": "#/components/schemas/RestaurantMenuCountData"
+        name:
+          type: "string"
+        name_ja:
+          type: "string"
+        official_information_flg:
+          type: "boolean"
+        opened_date:
+          type: "string"
+        original_service_charge:
+          type: "string"
+        owner_budget:
+          "$ref": "#/components/schemas/RestaurantBudget"
+        owner_plan_status:
+          type: "integer"
+        paid_member_flg:
+          type: "boolean"
+        parking:
+          type: "string"
+        payment:
+          type: "string"
+        photo_count_data:
+          "$ref": "#/components/schemas/RestaurantPhotoCountData"
+        plan_count:
+          type: "integer"
+        ppc_tel:
+          "$ref": "#/components/schemas/RestaurantPpc"
+        pr_information:
+          "$ref": "#/components/schemas/RestaurantPrInformation"
+        prefecture_id:
+          type: "integer"
+        prefecture_name:
+          type: "string"
+        private_room:
+          type: "string"
+        ranking_badge_icon_url:
+          type: "string"
+          format: "uri"
+        recommended_owner_photo_id_list:
+          type: "array"
+          items:
+            type: "integer"
+        recommended_posted_photo_id_list:
+          type: "array"
+          items:
+            type: "integer"
+        recommended_total_review_information_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantRecommendedTotalReviewInformation"
+        regular_holiday:
+          type: "string"
+        relocation_destination_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RelocationDestinationRestaurant"
+        remark:
+          type: "string"
+        reservation:
+          type: "string"
+        reservation_information:
+          "$ref": "#/components/schemas/RestaurantReservationInformation"
+        reservation_status:
+          "$ref": "#/components/schemas/Restaurant_ReservationStatus"
+        rich_appearance_flg:
+          type: "boolean"
+        seat:
+          type: "string"
+        seat_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSeatType"
+        service:
+          type: "string"
+        service_charge:
+          type: "string"
+        smoking:
+          type: "string"
+        space_equipment:
+          type: "string"
+        status:
+          "$ref": "#/components/schemas/Restaurant_Status"
+        sustainable_information_flg:
+          type: "boolean"
+        tabelog_award:
+          "$ref": "#/components/schemas/TabelogAward"
+        tabelog_award_history_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/TabelogAward"
+        tabelog_hyakumeiten:
+          "$ref": "#/components/schemas/TabelogHyakumeiten"
+        tabelog_hyakumeiten_history_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/TabelogHyakumeiten"
+        tabelog_url:
+          type: "string"
+          format: "uri"
+        tax_display_type:
+          "$ref": "#/components/schemas/Restaurant_TaxDisplayType"
+        tel:
+          type: "string"
+        test_restaurant_flg:
+          type: "boolean"
+        thumbnail_image_url_list:
+          type: "array"
+          items:
+            type: "string"
+            format: "uri"
+        total_hozon_count:
+          type: "integer"
+        total_review_count:
+          type: "integer"
+        total_score:
+          type: "number"
+          format: "float"
+        transportation:
+          type: "string"
+        twitter_url:
+          type: "string"
+          format: "uri"
+        usage_scene:
+          type: "string"
+        user_budget:
+          "$ref": "#/components/schemas/RestaurantBudget"
+        valid_phone_number_flg:
+          type: "boolean"
+        yoyakuplan_flg:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Restaurant"
+    RestaurantBudget:
+      type: "object"
+      properties:
+        dinner:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        lunch:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantBudget"
+    RestaurantBusinessHour:
+      type: "object"
+      properties:
+        close:
+          type: "string"
+        day_of_week:
+          "$ref": "#/components/schemas/RestaurantBusinessHour_DayOfWeek"
+        drink:
+          type: "string"
+        food:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        open:
+          type: "string"
+        open24_hours:
+          type: "boolean"
+        regular_holiday:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantBusinessHour"
+    RestaurantBusinessHourRemark:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        remark:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantBusinessHourRemark"
+    RestaurantBusinessHour_DayOfWeek:
+      type: "string"
+      enum:
+        - "afterPublicHoliday"
+        - "beforePublicHoliday"
+        - "friday"
+        - "monday"
+        - "publicHoliday"
+        - "saturday"
+        - "sunday"
+        - "thursday"
+        - "tuesday"
+        - "wednesday"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantBusinessHour$DayOfWeek"
+    RestaurantCommonPlanInformation:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        partner_type:
+          "$ref": "#/components/schemas/RestaurantCommonPlanInformation_PartnerType"
+        tax_display_type:
+          "$ref": "#/components/schemas/RestaurantCommonPlanInformation_TaxDisplayType"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantCommonPlanInformation"
+    RestaurantCommonPlanInformation_PartnerType:
+      type: "string"
+      enum:
+        - "tabelog"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantCommonPlanInformation$PartnerType"
+    RestaurantCommonPlanInformation_TaxDisplayType:
+      type: "string"
+      enum:
+        - "none"
+        - "taxExcluded"
+        - "taxIncluded"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantCommonPlanInformation$TaxDisplayType"
+    RestaurantDetailMenuListResult:
+      type: "object"
+      properties:
+        menu_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantMenu"
+        photo_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Photo"
+        plan_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantPlan"
+        seat_only_reservable_flg:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/RestaurantDetailMenuListResult"
+    RestaurantDetailPhotoListResult:
+      type: "object"
+      properties:
+        page_information:
+          "$ref": "#/components/schemas/PageInformation"
+        photo_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Photo"
+        user_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/User"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/RestaurantDetailPhotoListResult"
+    RestaurantDetailProsperityBannerListResult:
+      type: "object"
+      properties:
+        banner_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantProsperityBanner"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/RestaurantDetailProsperityBannerListResult"
+    RestaurantDetailReviewListResult:
+      type: "object"
+      properties:
+        page_information:
+          "$ref": "#/components/schemas/PageInformation"
+        photo_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Photo"
+        review_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Review"
+        user_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/User"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/RestaurantDetailReviewListResult"
+    RestaurantDetailShowResult:
+      type: "object"
+      properties:
+        business_hour_by_restaurant:
+          "$ref": "#/components/schemas/BusinessHourByRestaurant"
+        hozon_list_restaurant:
+          "$ref": "#/components/schemas/HozonListRestaurant"
+        hozon_restaurant:
+          "$ref": "#/components/schemas/HozonRestaurant"
+        photo_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Photo"
+        plan_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantPlan"
+        restaurant:
+          "$ref": "#/components/schemas/Restaurant"
+        total_review_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/TotalReview"
+        user_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/User"
+        visited_restaurant:
+          "$ref": "#/components/schemas/VisitedRestaurant"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/RestaurantDetailShowResult"
+    RestaurantDetailVacancyStatusOnLatestDaysResult:
+      type: "object"
+      properties:
+        vacancy_status_by_date_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VacancyStatusByDate"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/RestaurantDetailVacancyStatusOnLatestDaysResult"
+    RestaurantInfoLabel:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        highlight_flg:
+          type: "boolean"
+        title:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantInfoLabel"
+    RestaurantInstantReservationInformation:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        measurement_information:
+          "$ref": "#/components/schemas/RestaurantReservationMeasurementInformation"
+        member:
+          "$ref": "#/components/schemas/NumberRange"
+        time:
+          "$ref": "#/components/schemas/TimeRange"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantInstantReservationInformation"
+    RestaurantKeywordSearchResult:
+      type: "object"
+      properties:
+        hozon_list_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/HozonListRestaurant"
+        hozon_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/HozonRestaurant"
+        page_information:
+          "$ref": "#/components/schemas/PageInformation"
+        popular_genre_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Genre"
+        restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Restaurant"
+        search_condition_dependent_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/SearchConditionDependentRestaurant"
+        searched_condition:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition"
+        show_vacancy_type:
+          "$ref": "#/components/schemas/RestaurantKeywordSearchResult_ShowVacancyType"
+        visited_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VisitedRestaurant"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/RestaurantKeywordSearchResult"
+    RestaurantKeywordSearchResult_ShowVacancyType:
+      type: "string"
+      enum:
+        - "calendar"
+        - "time"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/RestaurantKeywordSearchResult$ShowVacancyType"
+    RestaurantKodawari:
+      type: "object"
+      properties:
+        category_type:
+          "$ref": "#/components/schemas/RestaurantKodawari_CategoryType"
+        description:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        photo_id:
+          type: "integer"
+        title:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantKodawari"
+    RestaurantKodawari_CategoryType:
+      type: "string"
+      enum:
+        - "chef"
+        - "drink"
+        - "food"
+        - "other"
+        - "service"
+        - "space"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantKodawari$CategoryType"
+    RestaurantLatestResult:
+      type: "object"
+      properties:
+        deleted_restaurant_id_list:
+          type: "array"
+          items:
+            type: "integer"
+        hozon_list_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/HozonListRestaurant"
+        hozon_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/HozonRestaurant"
+        restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Restaurant"
+        visited_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VisitedRestaurant"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/RestaurantLatestResult"
+    RestaurantMenu:
+      type: "object"
+      properties:
+        content_type:
+          "$ref": "#/components/schemas/RestaurantMenu_ContentType"
+        description:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        menu_type:
+          "$ref": "#/components/schemas/RestaurantMenu_MenuType"
+        name:
+          type: "string"
+        photo_id:
+          type: "integer"
+        photo_size_type:
+          "$ref": "#/components/schemas/RestaurantMenu_PhotoSizeType"
+        price:
+          type: "integer"
+        recommended_flg:
+          type: "boolean"
+        restaurant_id:
+          type: "integer"
+        updated_at:
+          type: "string"
+          format: "date-time"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantMenu"
+    RestaurantMenuCountData:
+      type: "object"
+      properties:
+        drink:
+          type: "integer"
+        food:
+          type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        lunch:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantMenuCountData"
+    RestaurantMenu_ContentType:
+      type: "string"
+      enum:
+        - "headline"
+        - "menu"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantMenu$ContentType"
+    RestaurantMenu_MenuType:
+      type: "string"
+      enum:
+        - "drink"
+        - "food"
+        - "lunch"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantMenu$MenuType"
+    RestaurantMenu_PhotoSizeType:
+      type: "string"
+      enum:
+        - "normal"
+        - "small"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantMenu$PhotoSizeType"
+    RestaurantPhotoCountData:
+      type: "object"
+      properties:
+        all:
+          type: "integer"
+        drink:
+          type: "integer"
+        exterior:
+          type: "integer"
+        food:
+          type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        interior:
+          type: "integer"
+        menu:
+          type: "integer"
+        other:
+          type: "integer"
+        user_post:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantPhotoCountData"
+    RestaurantPlan:
+      type: "object"
+      properties:
+        available_member:
+          "$ref": "#/components/schemas/NumberRange"
+        available_timezone:
+          type: "string"
+        available_weekday:
+          type: "string"
+        catalog_price:
+          type: "integer"
+        content:
+          type: "string"
+        coupon_required_flg:
+          type: "boolean"
+        description:
+          type: "string"
+        duration:
+          type: "string"
+        expiration_date:
+          type: "string"
+          format: "date"
+        food_count:
+          type: "integer"
+        freedrink_flg:
+          type: "boolean"
+        freefood_flg:
+          type: "boolean"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        instant_reservation_agreement_flg:
+          type: "boolean"
+        name:
+          type: "string"
+        partner_link_url:
+          type: "string"
+          format: "uri"
+        photo_id:
+          type: "integer"
+        popular_flg:
+          type: "boolean"
+        real_price:
+          type: "integer"
+        recommended_flg:
+          type: "boolean"
+        remark:
+          type: "string"
+        reservable_member:
+          "$ref": "#/components/schemas/NumberRange"
+        restaurant_id:
+          type: "integer"
+        thumbnail_image_url:
+          type: "string"
+          format: "uri"
+        updated_at:
+          type: "string"
+          format: "date-time"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantPlan"
+    RestaurantPpc:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        partner_type:
+          "$ref": "#/components/schemas/RestaurantPpc_PartnerType"
+        tel:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantPpc"
+    RestaurantPpc_PartnerType:
+      type: "string"
+      enum:
+        - "localPlace"
+        - "tabelog"
+        - "tablecross"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantPpc$PartnerType"
+    RestaurantPrInformation:
+      type: "object"
+      properties:
+        body:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        title:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantPrInformation"
+    RestaurantProsperityBanner:
+      type: "object"
+      properties:
+        count:
+          type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        type:
+          "$ref": "#/components/schemas/RestaurantProsperityBanner_Type"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantProsperityBanner"
+    RestaurantProsperityBanner_Type:
+      type: "string"
+      enum:
+        - "reservation"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantProsperityBanner$Type"
+    RestaurantQuestionAndAnswer:
+      type: "object"
+      properties:
+        answer:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        question:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantQuestionAndAnswer"
+    RestaurantRecommendedTotalReviewInformation:
+      type: "object"
+      properties:
+        bookmark_id:
+          type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        owner_pickup_flg:
+          type: "boolean"
+        tabelog_pickup_flg:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantRecommendedTotalReviewInformation"
+    RestaurantReservableTimeInformation:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        reservable_time_information_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VacancyStatusByTime"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantReservableTimeInformation"
+    RestaurantReservableTimeInformationListResult:
+      type: "object"
+      properties:
+        restaurant_reservable_time_information_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantReservableTimeInformation"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/RestaurantReservableTimeInformationListResult"
+    RestaurantReservationInformation:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        instant:
+          "$ref": "#/components/schemas/RestaurantInstantReservationInformation"
+        reservation_type:
+          "$ref": "#/components/schemas/RestaurantReservationInformation_ReservationType"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantReservationInformation"
+    RestaurantReservationInformation_ReservationType:
+      type: "string"
+      enum:
+        - "instant"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantReservationInformation$ReservationType"
+    RestaurantReservationMeasurementInformation:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        has_after_five_pm_today_stocks:
+          type: "boolean"
+        has_friday_seven_pm_stocks:
+          type: "boolean"
+        has_instant_reservation_only_plan:
+          type: "boolean"
+        has_reservable_stocks:
+          type: "boolean"
+        has_sales_number_of_seat_over_twenty_percent:
+          type: "boolean"
+        has_seven_pm_stocks:
+          type: "boolean"
+        private_room_type:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantReservationMeasurementInformation"
+    RestaurantSearchedCondition:
+      type: "object"
+      properties:
+        actual_free_keyword:
+          type: "string"
+        area:
+          "$ref": "#/components/schemas/Area"
+        area_datatype:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_AreaDatatype"
+        area_datatype_id:
+          type: "integer"
+        business_hour_type:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_BusinessHourType"
+        card_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_CardTypeList"
+        charter_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_CharterTypeList"
+        complete_private_room:
+          type: "boolean"
+        cost_timezone_type:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_CostTimezoneType"
+        course_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_CourseTypeList"
+        current_latitude:
+          type: "number"
+          format: "float"
+        current_longitude:
+          type: "number"
+          format: "float"
+        domestic_popular_flg:
+          type: "boolean"
+        drink_course_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_DrinkCourseTypeList"
+        drink_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_DrinkTypeList"
+        emoney_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_EmoneyTypeList"
+        fixed_area_search_flg:
+          type: "boolean"
+        food_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_FoodTypeList"
+        genre:
+          "$ref": "#/components/schemas/Genre"
+        genre_datatype:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_GenreDatatype"
+        genre_datatype_id:
+          type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        high_cost_type:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_HighCostType"
+        inbound_popular_flg:
+          type: "boolean"
+        kids_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_KidsTypeList"
+        last_minute_reservation_flg:
+          type: "boolean"
+        latitude:
+          type: "number"
+          format: "float"
+        location_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_LocationTypeList"
+        longitude:
+          type: "number"
+          format: "float"
+        low_cost_type:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_LowCostType"
+        max_latitude:
+          type: "number"
+          format: "float"
+        max_longitude:
+          type: "number"
+          format: "float"
+        min_latitude:
+          type: "number"
+          format: "float"
+        min_longitude:
+          type: "number"
+          format: "float"
+        net_reservation_unavailable:
+          type: "boolean"
+        open_on_sunday_flg:
+          type: "boolean"
+        parking_flg:
+          type: "boolean"
+        private_room_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_PrivateRoomTypeList"
+        qrcode_payment_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_QrcodePaymentTypeList"
+        range_type:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_RangeType"
+        reservation_datetime:
+          type: "string"
+          format: "date-time"
+        reservation_member:
+          type: "integer"
+        reservation_search_mode:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_ReservationSearchMode"
+        reservation_time_range:
+          type: "number"
+          format: "float"
+        reservation_type:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_ReservationType"
+        search_condition_nav_list:
+          type: "array"
+          items:
+            type: "string"
+        search_tag_category_ids:
+          type: "array"
+          items:
+            type: "integer"
+        search_tag_ids:
+          type: "array"
+          items:
+            type: "integer"
+        search_type:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_SearchType"
+        separation_smoking_flg:
+          type: "boolean"
+        service_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_ServiceTypeList"
+        situation_type:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_SituationType"
+        smoking_type:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_SmokingType"
+        sort_mode:
+          "$ref": "#/components/schemas/RestaurantSearchedCondition_SortMode"
+        space_facility_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_SpaceFacilityTypeList"
+        tabelog_award_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSearchedCondition_TabelogAwardTypeList"
+        tabelog_hyakumeiten_all_flg:
+          type: "boolean"
+        tabelog_hyakumeiten_category_id_list:
+          type: "array"
+          items:
+            type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition"
+    RestaurantSearchedCondition_AreaDatatype:
+      type: "string"
+      enum:
+        - "area1"
+        - "area2"
+        - "majorCity"
+        - "municipal"
+        - "prefecture"
+        - "station"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$AreaDatatype"
+    RestaurantSearchedCondition_BusinessHourType:
+      type: "string"
+      enum:
+        - "breakfast"
+        - "lunch"
+        - "over10pm"
+        - "over12pm"
+        - "untilFirstTrain"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$BusinessHourType"
+    RestaurantSearchedCondition_CardTypeList:
+      type: "string"
+      enum:
+        - "amex"
+        - "available"
+        - "diners"
+        - "jcb"
+        - "master"
+        - "visa"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$CardTypeList"
+    RestaurantSearchedCondition_CharterTypeList:
+      type: "string"
+      enum:
+        - "allowed50over"
+        - "allowedFrom20to50"
+        - "available"
+        - "limit20"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$CharterTypeList"
+    RestaurantSearchedCondition_CostTimezoneType:
+      type: "string"
+      enum:
+        - "dinner"
+        - "lunch"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$CostTimezoneType"
+    RestaurantSearchedCondition_CourseTypeList:
+      type: "string"
+      enum:
+        - "tabehoudai"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$CourseTypeList"
+    RestaurantSearchedCondition_DrinkCourseTypeList:
+      type: "string"
+      enum:
+        - "nomihoudai"
+        - "over180min"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$DrinkCourseTypeList"
+    RestaurantSearchedCondition_DrinkTypeList:
+      type: "string"
+      enum:
+        - "cocktail"
+        - "cocktailKodawari"
+        - "sake"
+        - "sakeKodawari"
+        - "shochu"
+        - "shochuKodawari"
+        - "wine"
+        - "wineKodawari"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$DrinkTypeList"
+    RestaurantSearchedCondition_EmoneyTypeList:
+      type: "string"
+      enum:
+        - "available"
+        - "idIc"
+        - "nanaco"
+        - "quicpay"
+        - "rakutenEdy"
+        - "trafficIc"
+        - "waon"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$EmoneyTypeList"
+    RestaurantSearchedCondition_FoodTypeList:
+      type: "string"
+      enum:
+        - "allergy"
+        - "breakfast"
+        - "calorie"
+        - "dessertTabehoudai"
+        - "englishMenu"
+        - "healthy"
+        - "seafood"
+        - "vegetable"
+        - "vegetarianMenu"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$FoodTypeList"
+    RestaurantSearchedCondition_GenreDatatype:
+      type: "string"
+      enum:
+        - "genre0"
+        - "genre1"
+        - "genre2"
+        - "genre3"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$GenreDatatype"
+    RestaurantSearchedCondition_HighCostType:
+      type: "string"
+      enum:
+        - "yen1000"
+        - "yen10000"
+        - "yen100000"
+        - "yen15000"
+        - "yen2000"
+        - "yen20000"
+        - "yen3000"
+        - "yen30000"
+        - "yen4000"
+        - "yen40000"
+        - "yen5000"
+        - "yen50000"
+        - "yen6000"
+        - "yen60000"
+        - "yen8000"
+        - "yen80000"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$HighCostType"
+    RestaurantSearchedCondition_KidsTypeList:
+      type: "string"
+      enum:
+        - "available"
+        - "baby"
+        - "babycar"
+        - "elementarySchoolStudent"
+        - "kidsMenu"
+        - "preschooler"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$KidsTypeList"
+    RestaurantSearchedCondition_LocationTypeList:
+      type: "string"
+      enum:
+        - "fineView"
+        - "hotel"
+        - "house"
+        - "kakurega"
+        - "nightView"
+        - "oceanView"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$LocationTypeList"
+    RestaurantSearchedCondition_LowCostType:
+      type: "string"
+      enum:
+        - "yen1000"
+        - "yen10000"
+        - "yen100000"
+        - "yen15000"
+        - "yen2000"
+        - "yen20000"
+        - "yen3000"
+        - "yen30000"
+        - "yen4000"
+        - "yen40000"
+        - "yen5000"
+        - "yen50000"
+        - "yen6000"
+        - "yen60000"
+        - "yen8000"
+        - "yen80000"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$LowCostType"
+    RestaurantSearchedCondition_PrivateRoomTypeList:
+      type: "string"
+      enum:
+        - "allowed2"
+        - "allowed30over"
+        - "allowed4"
+        - "allowed6"
+        - "allowed8"
+        - "allowedFrom10to20"
+        - "allowedFrom20to30"
+        - "available"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$PrivateRoomTypeList"
+    RestaurantSearchedCondition_QrcodePaymentTypeList:
+      type: "string"
+      enum:
+        - "auPay"
+        - "available"
+        - "dPay"
+        - "paypay"
+        - "rakutenPay"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$QrcodePaymentTypeList"
+    RestaurantSearchedCondition_RangeType:
+      type: "string"
+      enum:
+        - "range100"
+        - "range1000"
+        - "range10000"
+        - "range15000"
+        - "range2000"
+        - "range20000"
+        - "range300"
+        - "range3000"
+        - "range500"
+        - "range5000"
+        - "range800"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$RangeType"
+    RestaurantSearchedCondition_ReservationSearchMode:
+      type: "string"
+      enum:
+        - "currentVacant"
+        - "instant"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$ReservationSearchMode"
+    RestaurantSearchedCondition_ReservationType:
+      type: "string"
+      enum:
+        - "appointmentOnly"
+        - "available"
+        - "unavailable"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$ReservationType"
+    RestaurantSearchedCondition_SearchType:
+      type: "string"
+      enum:
+        - "current"
+        - "map"
+        - "normal"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$SearchType"
+    RestaurantSearchedCondition_ServiceTypeList:
+      type: "string"
+      enum:
+        - "carryOnDrink"
+        - "celebrate"
+        - "delivery"
+        - "over150minParty"
+        - "pets"
+        - "sommelier"
+        - "takeout"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$ServiceTypeList"
+    RestaurantSearchedCondition_SituationType:
+      type: "string"
+      enum:
+        - "banquest"
+        - "date"
+        - "family"
+        - "friend"
+        - "gokon"
+        - "joshikai"
+        - "oneself"
+        - "reception"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$SituationType"
+    RestaurantSearchedCondition_SmokingType:
+      type: "string"
+      enum:
+        - "allowed"
+        - "nonSmoking"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$SmokingType"
+    RestaurantSearchedCondition_SortMode:
+      type: "string"
+      enum:
+        - "accessRanking"
+        - "distance"
+        - "domesticMostReserved"
+        - "reservationRanking"
+        - "totalRanking"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$SortMode"
+    RestaurantSearchedCondition_SpaceFacilityTypeList:
+      type: "string"
+      enum:
+        - "counter"
+        - "coupleSeat"
+        - "darts"
+        - "freeWifi"
+        - "horigotatsu"
+        - "karaoke"
+        - "live"
+        - "paidWifi"
+        - "powerOutlet"
+        - "projector"
+        - "relaxSpace"
+        - "sofa"
+        - "sports"
+        - "standingBar"
+        - "stylishSpace"
+        - "terrace"
+        - "wheelchair"
+        - "wideSeat"
+        - "zashiki"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$SpaceFacilityTypeList"
+    RestaurantSearchedCondition_TabelogAwardTypeList:
+      type: "string"
+      enum:
+        - "bronze"
+        - "gold"
+        - "silver"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSearchedCondition$TabelogAwardTypeList"
+    RestaurantSeatType:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        seat_type_id:
+          type: "integer"
+        seat_type_name:
+          type: "string"
+        seat_type_photo_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantSeatTypePhoto"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSeatType"
+    RestaurantSeatTypePhoto:
+      type: "object"
+      properties:
+        caption:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        photo_id:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/RestaurantSeatTypePhoto"
+    RestaurantVacancyStatusOnLatestDaysResult:
+      type: "object"
+      properties:
+        reserve_date_status_list_by_restaurant:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/ReserveDateStatusListByRestaurant"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/RestaurantVacancyStatusOnLatestDaysResult"
+    Restaurant_MapIconType:
+      type: "string"
+      enum:
+        - "bakery"
+        - "bar"
+        - "cafe"
+        - "other"
+        - "ramen"
+        - "restaurants"
+        - "ryokanAuberge"
+        - "sweets"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Restaurant$MapIconType"
+    Restaurant_ReservationStatus:
+      type: "string"
+      enum:
+        - "impossible"
+        - "onlyReservation"
+        - "possible"
+        - "unconfirmed"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Restaurant$ReservationStatus"
+    Restaurant_Status:
+      type: "string"
+      enum:
+        - "changed"
+        - "closed"
+        - "deleted"
+        - "open"
+        - "pending"
+        - "removed"
+        - "renewal"
+        - "suspend"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Restaurant$Status"
+    Restaurant_TaxDisplayType:
+      type: "string"
+      enum:
+        - "none"
+        - "taxExcluded"
+        - "taxIncluded"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Restaurant$TaxDisplayType"
+    Review:
+      type: "object"
+      properties:
+        bookmark_id:
+          type: "integer"
+        comment:
+          type: "string"
+        delivery_rating_information:
+          "$ref": "#/components/schemas/ReviewRatingInformation"
+        dinner_rating_information:
+          "$ref": "#/components/schemas/ReviewRatingInformation"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        lunch_rating_information:
+          "$ref": "#/components/schemas/ReviewRatingInformation"
+        other_rating_information:
+          "$ref": "#/components/schemas/ReviewRatingInformation"
+        parent_comment_id_list:
+          type: "array"
+          items:
+            type: "integer"
+        photo_id_list:
+          type: "array"
+          items:
+            type: "integer"
+        pickup_liked_user_id_list:
+          type: "array"
+          items:
+            type: "integer"
+        pickup_photo_id_list:
+          type: "array"
+          items:
+            type: "integer"
+        restaurant_id:
+          type: "integer"
+        status:
+          "$ref": "#/components/schemas/Review_Status"
+        takeout_rating_information:
+          "$ref": "#/components/schemas/ReviewRatingInformation"
+        title:
+          type: "string"
+        use_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Review_UseTypeList"
+        user_id:
+          type: "integer"
+        user_updated_at:
+          type: "string"
+          format: "date-time"
+        viewpoint:
+          "$ref": "#/components/schemas/Review_Viewpoint"
+        visited_date:
+          type: "string"
+          format: "date"
+        visited_times:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Review"
+    ReviewRatingInformation:
+      type: "object"
+      properties:
+        cost_score:
+          type: "number"
+          format: "float"
+        drink_score:
+          type: "number"
+          format: "float"
+        food_score:
+          type: "number"
+          format: "float"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        mood_score:
+          type: "number"
+          format: "float"
+        price_type:
+          "$ref": "#/components/schemas/ReviewRatingInformation_PriceType"
+        service_score:
+          type: "number"
+          format: "float"
+        total_score:
+          type: "number"
+          format: "float"
+        unordinary_use_flg:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/ReviewRatingInformation"
+    ReviewRatingInformation_PriceType:
+      type: "string"
+      enum:
+        - "from10000to14999"
+        - "from1000to1999"
+        - "from15000to19999"
+        - "from20000to29999"
+        - "from2000to2999"
+        - "from30000to39999"
+        - "from3000to3999"
+        - "from40000to49999"
+        - "from4000to4999"
+        - "from50000to59999"
+        - "from5000to5999"
+        - "from60000to79999"
+        - "from6000to7999"
+        - "from80000to99999"
+        - "from8000to9999"
+        - "limit999"
+        - "over100000"
+        - "over30000"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/ReviewRatingInformation$PriceType"
+    Review_Status:
+      type: "string"
+      enum:
+        - "followerOnly"
+        - "modificationRequest"
+        - "privateStatus"
+        - "publicStatus"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Review$Status"
+    Review_UseTypeList:
+      type: "string"
+      enum:
+        - "delivery"
+        - "dinner"
+        - "lunch"
+        - "other"
+        - "takeout"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Review$UseTypeList"
+    Review_Viewpoint:
+      type: "string"
+      enum:
+        - "restaurant"
+        - "timeline"
+        - "user"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Review$Viewpoint"
+    RoutesRequest:
+      type: "object"
+      properties:
+        destination:
+          "$ref": "#/components/schemas/RoutesRequest_Waypoint"
+        language_code:
+          type: "string"
+        origin:
+          "$ref": "#/components/schemas/RoutesRequest_Waypoint"
+        travel_mode: {}
+      "x-class": "com/kakaku/tabelog/tourists/infra/network/google/RoutesRequest"
+    RoutesRequest_LatLng:
+      type: "object"
+      properties:
+        latitude:
+          type: "number"
+          format: "double"
+        longitude:
+          type: "number"
+          format: "double"
+      "x-class": "com/kakaku/tabelog/tourists/infra/network/google/RoutesRequest$LatLng"
+    RoutesRequest_Location:
+      type: "object"
+      properties:
+        lat_lng:
+          "$ref": "#/components/schemas/RoutesRequest_LatLng"
+      "x-class": "com/kakaku/tabelog/tourists/infra/network/google/RoutesRequest$Location"
+    RoutesRequest_Waypoint:
+      type: "object"
+      properties:
+        location:
+          "$ref": "#/components/schemas/RoutesRequest_Location"
+      "x-class": "com/kakaku/tabelog/tourists/infra/network/google/RoutesRequest$Waypoint"
+    SearchConditionDependentRestaurant:
+      type: "object"
+      properties:
+        area_text:
+          type: "string"
+        distance_from_current_location:
+          type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        hyakumeiten_icon_url:
+          type: "string"
+          format: "uri"
+        id:
+          type: "integer"
+        instant_reservation_information:
+          "$ref": "#/components/schemas/RestaurantInstantReservationInformation"
+        koshitsu_info:
+          type: "string"
+        koshitsu_num_info:
+          type: "string"
+        ppc_tel:
+          "$ref": "#/components/schemas/RestaurantPpc"
+        restaurant_info_label_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RestaurantInfoLabel"
+        tabelog_award_icon_url:
+          type: "string"
+          format: "uri"
+        tel:
+          type: "string"
+        valid_phone_number_flg:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/SearchConditionDependentRestaurant"
+    SearchTag:
+      type: "object"
+      properties:
+        category_id:
+          type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        tag_id:
+          type: "integer"
+        tag_name:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/SearchTag"
+    SearchTagCategory:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        tag_category_id:
+          type: "integer"
+        tag_category_name:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/SearchTagCategory"
+    SecretTokenGenerateResult:
+      type: "object"
+      properties:
+        secret_token:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/SecretTokenGenerateResult"
+    Suggest:
+      type: "object"
+      properties:
+        condition_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/SuggestCondition"
+        contents_id:
+          type: "integer"
+        display_name:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        suggest_type:
+          "$ref": "#/components/schemas/Suggest_SuggestType"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Suggest"
+    SuggestCondition:
+      type: "object"
+      properties:
+        contents_id:
+          type: "integer"
+        display_name:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        suggest_type:
+          "$ref": "#/components/schemas/SuggestCondition_SuggestType"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/SuggestCondition"
+    SuggestConditionDependentRestaurant:
+      type: "object"
+      properties:
+        area_text:
+          type: "string"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/SuggestConditionDependentRestaurant"
+    SuggestCondition_SuggestType:
+      type: "string"
+      enum:
+        - "area1"
+        - "area2"
+        - "genre0"
+        - "genre1"
+        - "genre2"
+        - "genre3"
+        - "majorCity"
+        - "municipal"
+        - "prefecture"
+        - "restaurant"
+        - "searchTag"
+        - "searchTagCategory"
+        - "station"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/SuggestCondition$SuggestType"
+    SuggestSearchResult:
+      type: "object"
+      properties:
+        default_range_type:
+          "$ref": "#/components/schemas/SuggestSearchResult_DefaultRangeType"
+        restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Restaurant"
+        suggest_condition_dependent_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/SuggestConditionDependentRestaurant"
+        suggest_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Suggest"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/SuggestSearchResult"
+    SuggestSearchResult_DefaultRangeType:
+      type: "string"
+      enum:
+        - "range100"
+        - "range1000"
+        - "range10000"
+        - "range15000"
+        - "range2000"
+        - "range20000"
+        - "range300"
+        - "range3000"
+        - "range500"
+        - "range5000"
+        - "range800"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/SuggestSearchResult$DefaultRangeType"
+    Suggest_SuggestType:
+      type: "string"
+      enum:
+        - "area1"
+        - "area2"
+        - "genre0"
+        - "genre1"
+        - "genre2"
+        - "genre3"
+        - "majorCity"
+        - "multiCondition"
+        - "municipal"
+        - "prefecture"
+        - "restaurant"
+        - "searchTag"
+        - "searchTagCategory"
+        - "station"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/Suggest$SuggestType"
+    TabelogAward:
+      type: "object"
+      properties:
+        award_type:
+          type: "string"
+        award_year:
+          type: "integer"
+        detail_badge_icon_url:
+          type: "string"
+          format: "uri"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        lp_url:
+          type: "string"
+          format: "uri"
+        open_browser_flg:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/TabelogAward"
+    TabelogHyakumeiten:
+      type: "object"
+      properties:
+        award_year:
+          type: "integer"
+        category_id:
+          type: "integer"
+        detail_badge_icon_url:
+          type: "string"
+          format: "uri"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        lp_url:
+          type: "string"
+          format: "uri"
+        open_browser_flg:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/TabelogHyakumeiten"
+    TimeRange:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        max:
+          type: "string"
+        min:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/TimeRange"
+    TotalReview:
+      type: "object"
+      properties:
+        comment:
+          type: "string"
+        delivery_rating_information:
+          "$ref": "#/components/schemas/TotalReviewRatingInformation"
+        dinner_rating_information:
+          "$ref": "#/components/schemas/TotalReviewRatingInformation"
+        display_day_of_visit_date_flg:
+          type: "boolean"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        last_visited_date:
+          type: "string"
+          format: "date"
+        latest_pickup_review_id:
+          type: "integer"
+        latest_pickup_review_like_count:
+          type: "integer"
+        lunch_rating_information:
+          "$ref": "#/components/schemas/TotalReviewRatingInformation"
+        other_rating_information:
+          "$ref": "#/components/schemas/TotalReviewRatingInformation"
+        photo_count:
+          type: "integer"
+        pickup_photo_id_list:
+          type: "array"
+          items:
+            type: "integer"
+        public_level:
+          "$ref": "#/components/schemas/TotalReview_PublicLevel"
+        restaurant_id:
+          type: "integer"
+        takeout_rating_information:
+          "$ref": "#/components/schemas/TotalReviewRatingInformation"
+        title:
+          type: "string"
+        total_score:
+          type: "number"
+          format: "float"
+        use_type_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/TotalReview_UseTypeList"
+        user_id:
+          type: "integer"
+        user_updated_at:
+          type: "string"
+          format: "date-time"
+        viewpoint:
+          "$ref": "#/components/schemas/TotalReview_Viewpoint"
+        visited_count:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/TotalReview"
+    TotalReviewPhotoListResult:
+      type: "object"
+      properties:
+        page_information:
+          "$ref": "#/components/schemas/PageInformation"
+        photo_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Photo"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/TotalReviewPhotoListResult"
+    TotalReviewRatingInformation:
+      type: "object"
+      properties:
+        cost_score:
+          type: "number"
+          format: "float"
+        drink_score:
+          type: "number"
+          format: "float"
+        food_score:
+          type: "number"
+          format: "float"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        mood_score:
+          type: "number"
+          format: "float"
+        price_type:
+          "$ref": "#/components/schemas/TotalReviewRatingInformation_PriceType"
+        service_score:
+          type: "number"
+          format: "float"
+        total_score:
+          type: "number"
+          format: "float"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/TotalReviewRatingInformation"
+    TotalReviewRatingInformation_PriceType:
+      type: "string"
+      enum:
+        - "from10000to14999"
+        - "from1000to1999"
+        - "from15000to19999"
+        - "from20000to29999"
+        - "from2000to2999"
+        - "from30000to39999"
+        - "from3000to3999"
+        - "from40000to49999"
+        - "from4000to4999"
+        - "from50000to59999"
+        - "from5000to5999"
+        - "from60000to79999"
+        - "from6000to7999"
+        - "from80000to99999"
+        - "from8000to9999"
+        - "limit999"
+        - "over100000"
+        - "over30000"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/TotalReviewRatingInformation$PriceType"
+    TotalReviewReviewListResult:
+      type: "object"
+      properties:
+        page_information:
+          "$ref": "#/components/schemas/PageInformation"
+        photo_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Photo"
+        review_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Review"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/TotalReviewReviewListResult"
+    TotalReviewShowResult:
+      type: "object"
+      properties:
+        first_page_review_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Review"
+        page_information:
+          "$ref": "#/components/schemas/PageInformation"
+        photo_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/Photo"
+        posted_user:
+          "$ref": "#/components/schemas/User"
+        restaurant:
+          "$ref": "#/components/schemas/Restaurant"
+        total_review:
+          "$ref": "#/components/schemas/TotalReview"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/TotalReviewShowResult"
+    TotalReview_PublicLevel:
+      type: "string"
+      enum:
+        - "followerOnly"
+        - "privateLevel"
+        - "publicLevel"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/TotalReview$PublicLevel"
+    TotalReview_UseTypeList:
+      type: "string"
+      enum:
+        - "delivery"
+        - "dinner"
+        - "lunch"
+        - "other"
+        - "takeout"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/TotalReview$UseTypeList"
+    TotalReview_Viewpoint:
+      type: "string"
+      enum:
+        - "restaurant"
+        - "user"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/TotalReview$Viewpoint"
+    User:
+      type: "object"
+      properties:
+        alias_name:
+          type: "string"
+        authenticated_flg:
+          type: "boolean"
+        follow_count:
+          type: "integer"
+        follower_count:
+          type: "integer"
+        gourmet_celebrity_flg:
+          type: "boolean"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        hometown:
+          type: "string"
+        id:
+          type: "integer"
+        log_count:
+          type: "integer"
+        new_gourmet_celebrity_flg:
+          type: "boolean"
+        nickname:
+          type: "string"
+        original_thumbnail_icon_image_url:
+          type: "string"
+          format: "uri"
+        posted_photo_count:
+          type: "integer"
+        private_account_flg:
+          type: "boolean"
+        public_review_count:
+          type: "integer"
+        small_thumbnail_icon_image_url:
+          type: "string"
+          format: "uri"
+        tra_winners_flg:
+          type: "boolean"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/User"
+    VacancyStatusByDate:
+      type: "object"
+      properties:
+        date:
+          type: "string"
+          format: "date"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        holiday_flg:
+          type: "boolean"
+        number:
+          type: "integer"
+        status:
+          "$ref": "#/components/schemas/VacancyStatusByDate_Status"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/VacancyStatusByDate"
+    VacancyStatusByDate_Status:
+      type: "string"
+      enum:
+        - "closeDay"
+        - "enough"
+        - "little"
+        - "none"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/VacancyStatusByDate$Status"
+    VacancyStatusByMember:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        member:
+          type: "integer"
+        status:
+          "$ref": "#/components/schemas/VacancyStatusByMember_Status"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/VacancyStatusByMember"
+    VacancyStatusByMember_Status:
+      type: "string"
+      enum:
+        - "enough"
+        - "little"
+        - "none"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/VacancyStatusByMember$Status"
+    VacancyStatusByTime:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        link_url:
+          type: "string"
+          format: "uri"
+        reservable_flg:
+          type: "boolean"
+        time:
+          type: "string"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/VacancyStatusByTime"
+    VisitAchievement:
+      type: "object"
+      properties:
+        genre_ids:
+          type: "array"
+          items:
+            type: "integer"
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        prefecture_ids:
+          type: "array"
+          items:
+            type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/VisitAchievement"
+    VisitedRestaurant:
+      type: "object"
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/Granularity"
+        id:
+          type: "integer"
+        restaurant_id:
+          type: "integer"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/entity/VisitedRestaurant"
+    VisitedRestaurantCreateResult:
+      type: "object"
+      properties:
+        level_status:
+          "$ref": "#/components/schemas/LevelStatus"
+        visit_achievement:
+          "$ref": "#/components/schemas/VisitAchievement"
+        visited_restaurant:
+          "$ref": "#/components/schemas/VisitedRestaurant"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/VisitedRestaurantCreateResult"
+    VisitedRestaurantDestroyResult:
+      type: "object"
+      properties:
+        deleted_visited_restaurant_id:
+          type: "integer"
+        level_status:
+          "$ref": "#/components/schemas/LevelStatus"
+        visit_achievement:
+          "$ref": "#/components/schemas/VisitAchievement"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/VisitedRestaurantDestroyResult"
+    VisitedRestaurantIndexResult:
+      type: "object"
+      properties:
+        page_information:
+          "$ref": "#/components/schemas/PageInformation"
+        visited_restaurant_list:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/VisitedRestaurant"
+      "x-class": "com/kakaku/tabelog/tourists/domain/response/result/VisitedRestaurantIndexResult"
+security:
+  - SecretToken: []
