@@ -87,3 +87,9 @@ tabelog/
 | Token rotation | `GET account/latest` returns a new access token and revokes the previous one |
 
 See [NOTES.md](NOTES.md) for the rest. Unofficial and not affiliated with Tabelog or Kakaku.com.
+
+---
+
+## Disclaimer
+
+**Use at your own risk.** Calling these APIs outside the official app may violate the service's terms and can lead to rate limiting, a suspended or banned account, or loss of data. The authors accept no responsibility for any consequences to your account. Use only your own account, and never share your credentials or tokens.
