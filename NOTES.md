@@ -1,6 +1,6 @@
 # Tabelog Inbound (com.kakaku.tabelog.tourists 2.24.1) API notes
 
-Source: static analysis of the decompiled smali. Nothing here was tested against the live service.
+Source: static analysis of the decompiled smali. On 2026-10-29 these calls were checked live without an account and returned data: `secret_token_generate/create` (random UUID as `code`), `suggest_search`, `area_area1`, `restaurant_search` (needs `page` and `search_type=normal`; other values give HTTP 400), `restaurant_detail/show`, review, menu and photo lists, `popular_item_nearby`. Everything else is untested. The same token request from Python `httpx` got HTTP 403 from Tabelog's Cloudflare, while `requests` succeeded.
 
 ## Client setup
 

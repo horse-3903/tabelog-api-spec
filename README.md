@@ -98,6 +98,8 @@ See [NOTES.md](NOTES.md) for the rest. Unofficial and not affiliated with Tabelo
 
 **What can the Tabelog API do?** Search Japanese restaurants, read restaurant details and areas, manage saved lists and visited logs, make reservations and handle notifications and login.
 
+**Is there a Tabelog MCP server?** Yes: [tabelog-mcp](https://github.com/horse-3903/tabelog-mcp) lets Claude and other AI assistants use this API.
+
 **Which Tabelog version is documented?** Tabelog Inbound (`com.kakaku.tabelog.tourists`) 2.24.1.
 
 ---
@@ -111,4 +113,5 @@ See [NOTES.md](NOTES.md) for the rest. Unofficial and not affiliated with Tabelo
 ## Related
 
 - [beli-api-spec](https://github.com/horse-3903/beli-api-spec): the sibling unofficial API spec
+- [tabelog-mcp](https://github.com/horse-3903/tabelog-mcp): MCP server built on this spec
 - [openapi-catalog](https://github.com/horse-3903/openapi-catalog): index of all unofficial API specs
