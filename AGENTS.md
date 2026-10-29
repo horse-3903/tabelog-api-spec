@@ -12,9 +12,9 @@ OpenAPI 3.0.3 spec for the Tabelog Inbound app backend (`com.kakaku.tabelog.tour
 ## Rebuild
 
 ```bash
-python tabelog/tools/extract.py <decompiled.zip> <output_dir>
-python tabelog/tools/openapi_gen.py <output_dir>/smali tabelog/tabelog-openapi
-openapi-spec-validator tabelog/tabelog-openapi.yaml
+python tools/extract.py <decompiled.zip> <output_dir>
+python tools/openapi_gen.py <output_dir>/smali tabelog-openapi
+openapi-spec-validator tabelog-openapi.yaml
 ```
 
 ## Conventions
@@ -26,7 +26,7 @@ openapi-spec-validator tabelog/tabelog-openapi.yaml
 
 ## Rules
 
-- Never commit tokens, `.env` files, saved login state, APKs or zips. The root `.gitignore` covers these.
+- Never commit tokens, `.env` files, saved login state, APKs or zips. `.gitignore` covers these.
 - Specs come from code, not live traffic. Do not mark fields required or nullable unless verified, and say clearly what is verified versus inferred.
 - After changing a spec, validate it with `openapi-spec-validator`. Keep YAML and JSON in sync by regenerating both from the script, never by editing one by hand.
 - Do not use em dashes in any text. Keep commit messages to one short line, with no Co-Authored-By trailers. Only commit when asked.

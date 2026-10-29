@@ -6,8 +6,8 @@ Unofficial Tabelog API documentation as an OpenAPI 3.0.3 spec: 62 operations for
 
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0.3-6BA539?style=flat-square&logo=openapiinitiative&logoColor=white)](tabelog-openapi.yaml)
 [![Python](https://img.shields.io/badge/Python_3.10-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![License](https://img.shields.io/github/license/horse-3903/openapi-catalog?style=flat-square)](../LICENSE)
-[![Last Commit](https://img.shields.io/github/last-commit/horse-3903/openapi-catalog?style=flat-square)](../../../commits)
+[![License](https://img.shields.io/github/license/horse-3903/tabelog-api-spec?style=flat-square)](LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/horse-3903/tabelog-api-spec?style=flat-square)](../../commits)
 
 </div>
 
@@ -49,15 +49,15 @@ Unofficial Tabelog API documentation as an OpenAPI 3.0.3 spec: 62 operations for
 Open `tabelog-openapi.yaml` (or `tabelog-openapi.json`) in Swagger UI, Postman or Insomnia, or generate a client:
 
 ```bash
-npx @openapitools/openapi-generator-cli generate -i tabelog/tabelog-openapi.yaml -g python -o tabelog-client
+npx @openapitools/openapi-generator-cli generate -i tabelog-openapi.yaml -g python -o tabelog-client
 ```
 
 ### Regenerate
 
 ```bash
-python tabelog/tools/extract.py <decompiled.zip> <output_dir>
-python tabelog/tools/openapi_gen.py <output_dir>/smali tabelog/tabelog-openapi
-openapi-spec-validator tabelog/tabelog-openapi.yaml
+python tools/extract.py <decompiled.zip> <output_dir>
+python tools/openapi_gen.py <output_dir>/smali tabelog-openapi
+openapi-spec-validator tabelog-openapi.yaml
 ```
 
 ---
@@ -65,7 +65,7 @@ openapi-spec-validator tabelog/tabelog-openapi.yaml
 ## Project Structure
 
 ```
-tabelog/
+tabelog-api-spec/
 ├── tabelog-openapi.yaml     # OpenAPI 3.0.3 spec
 ├── tabelog-openapi.json     # same spec as JSON
 ├── NOTES.md                 # endpoint notes and auth flow
@@ -93,3 +93,10 @@ See [NOTES.md](NOTES.md) for the rest. Unofficial and not affiliated with Tabelo
 ## Disclaimer
 
 **Use at your own risk.** Calling these APIs outside the official app may violate the service's terms and can lead to rate limiting, a suspended or banned account, or loss of data. The authors accept no responsibility for any consequences to your account. Use only your own account, and never share your credentials or tokens.
+
+---
+
+## Related
+
+- [beli-api-spec](https://github.com/horse-3903/beli-api-spec): the sibling unofficial API spec
+- [openapi-catalog](https://github.com/horse-3903/openapi-catalog): index of all unofficial API specs
