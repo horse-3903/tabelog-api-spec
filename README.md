@@ -90,6 +90,18 @@ See [NOTES.md](NOTES.md) for the rest. Unofficial and not affiliated with Tabelo
 
 ---
 
+## FAQ
+
+**Is there an official Tabelog API?** Tabelog has no public developer API for restaurant data. This repo documents the private API used by the Tabelog Inbound app, reverse engineered from the app, so it can change without notice.
+
+**Is there a Tabelog SDK?** This repo ships the Tabelog OpenAPI (Swagger) spec, from which you can generate a Tabelog API client or SDK in Python, TypeScript, Go and more with `openapi-generator`.
+
+**What can the Tabelog API do?** Search Japanese restaurants, read restaurant details and areas, manage saved lists and visited logs, make reservations and handle notifications and login.
+
+**Which Tabelog version is documented?** Tabelog Inbound (`com.kakaku.tabelog.tourists`) 2.24.1.
+
+---
+
 ## Disclaimer
 
 **Use at your own risk.** Calling these APIs outside the official app may violate the service's terms and can lead to rate limiting, a suspended or banned account, or loss of data. The authors accept no responsibility for any consequences to your account. Use only your own account, and never share your credentials or tokens.
