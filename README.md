@@ -114,4 +114,3 @@ See [NOTES.md](NOTES.md) for the rest. Unofficial and not affiliated with Tabelo
 
 - [beli-api-spec](https://github.com/horse-3903/beli-api-spec): the sibling unofficial API spec
 - [tabelog-mcp](https://github.com/horse-3903/tabelog-mcp): MCP server built on this spec
-- [openapi-catalog](https://github.com/horse-3903/openapi-catalog): index of all unofficial API specs
